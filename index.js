@@ -51,15 +51,10 @@ top3.x = 400
 top3.y = 0
 stage.addChild(top3)
 
-// Globals
-var PauseTime = 10
-var tick = 0
-var traj = 0
-var modeExit = PauseTime
-
 // Render Loop
 var scoreVal = 0
-var clock =  0 ; var now = Date.now()
+var clock =  0 ;
+var now = Date.now()
 var start = Date.now()
 
 //
@@ -73,14 +68,17 @@ class Stamp{
 
 var scores = [];
 var record = [];
+var go = 0
 
 window.setInterval(function() {
-  // Time management
-  clock += Date.now() - now
-  now = Date.now()
-  console.log(clock)
-  // Update the Timer display
-  timer.text = (clock/1000).toFixed(0)
+  if(go == 1){
+    // Time management
+    clock += Date.now() - now
+    now = Date.now()
+    console.log(clock)
+    // Update the Timer display
+    timer.text = (clock/1000).toFixed(0)
+  }
   // Render the stage
   renderer.render(stage)
 },100)
@@ -92,9 +90,9 @@ var correctQ = 0
 document.addEventListener("keydown",function(event) {
   // Log time and key
   key = event.keyCode
-  console.log(clock,tick,key)
+  console.log(clock,key)
   // Record time and key to Firebase
-  if(key==49 || key==50 || key==51){
+  if((key==49 || key==50 || key==51) && go == 1){
     // Type labels
     var Typer = "Paragraph"
     if(key==49){
@@ -142,6 +140,12 @@ document.addEventListener("keydown",function(event) {
     // Clean your clock
     clock = 0;
   }
+  // Fire the starting pistol
+  if(go == 0 && key == 13){
+    go = 1;
+    now = Date.now()
+    start = Date.now()
+  }
   // End
 })
 
@@ -150,9 +154,9 @@ function sendData(){
   var title = document.getElementById("myText").value;
   if(title != "Title; a Semiotic Exploration of Declared Identity"){
     firebase.push({sprints : record,
-      date : Date.now(),
       ip : userip,
       filename : title,
+      begin : start,
     })
   }
 }
