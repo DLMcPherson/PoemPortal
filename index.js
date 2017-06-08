@@ -7,6 +7,7 @@ renderer.roundPixels = true
 
 // Connect to my Firebase
 var firebase = new Firebase("https://readtimer-81ad0.firebaseio.com")
+var firstbase = [];
 
 // ===================== SETUP SCREENS ================== //
 
@@ -16,22 +17,39 @@ var stage = new PIXI.Container()
 var graphics = new PIXI.Graphics();
 stage.addChild(graphics)
   // Text
-var instr1 = new PIXI.Text('Q: Paragraph',{font : '12px Gill Sans', fill : 0x077f4d});
+var instr1 = new PIXI.Text('1: Paragraph',{font : '12px Gill Sans', fill : 0x077f4d});
 instr1.x = 0
-instr1.y = 500
+instr1.y = 50
 stage.addChild(instr1)
-var instr2 = new PIXI.Text('W: Reflection',{font : '12px Gill Sans', fill : 0x077f4d});
+var instr2 = new PIXI.Text('2: Reflection',{font : '12px Gill Sans', fill : 0x077f4d});
 instr2.x = 200
-instr2.y = 500
+instr2.y = 50
 stage.addChild(instr2)
-var instr3 = new PIXI.Text('E: Equation',{font : '12px Gill Sans', fill : 0x077f4d});
+var instr3 = new PIXI.Text('3: Equation',{font : '12px Gill Sans', fill : 0x077f4d});
 instr3.x = 400
-instr3.y = 500
+instr3.y = 50
 stage.addChild(instr3)
-var timer = new PIXI.Text('0',{font : '24px Gill Sans', fill : 0x077f4d})
+ // Timer
+var timer = new PIXI.Text('0',{font : '30px Gill Sans', fill : 0xcf4c34, align: 'center'})
 timer.x = 200
 timer.y = 0
 stage.addChild(timer)
+ // Top Speeds
+var highscore1 = 1000000;
+var top1 = new PIXI.Text('NA',{font : '24px Gill Sans', fill : 0x077f4d});
+top1.x = 0
+top1.y = 0
+stage.addChild(top1)
+var highscore2 = 1000000;
+var top2 = new PIXI.Text('NA',{font : '24px Gill Sans', fill : 0x077f4d});
+top2.x = 200
+top2.y = 0
+//stage.addChild(top2)
+var highscore3 = 1000000;
+var top3 = new PIXI.Text('NA',{font : '24px Gill Sans', fill : 0x077f4d});
+top3.x = 400
+top3.y = 0
+stage.addChild(top3)
 
 // Globals
 var PauseTime = 10
@@ -54,6 +72,7 @@ class Stamp{
 
 
 var scores = [];
+var record = [];
 
 window.setInterval(function() {
   // Time management
@@ -61,7 +80,7 @@ window.setInterval(function() {
   now = Date.now()
   console.log(clock)
   // Update the Timer display
-  timer.text = (clock/1000).toFixed(1)
+  timer.text = (clock/1000).toFixed(0)
   // Render the stage
   renderer.render(stage)
 },100)
@@ -75,17 +94,32 @@ document.addEventListener("keydown",function(event) {
   key = event.keyCode
   console.log(clock,tick,key)
   // Record time and key to Firebase
-  if(key==81 || key==87 || key==69){
+  if(key==49 || key==50 || key==51){
     // Type labels
     var Typer = "Paragraph"
-    if(key==87){
+    if(key==49){
+      if(clock<highscore1){
+        highscore1=clock
+        top1.text = (clock/1000).toFixed(2)
+      }
+      Typer = "Paragraph"
+    }
+    if(key==50){
+      if(clock<highscore2){
+        highscore2=clock
+        top2.text = (clock/1000).toFixed(2)
+      }
       Typer = "Reflection"
     }
-    if(key==69){
+    if(key==51){
+      if(clock<highscore3){
+        highscore3=clock
+        top3.text = (clock/1000).toFixed(2)
+      }
       Typer = "Equation"
     }
     // Report
-    firebase.push({
+    firstbase.push({
       type : Typer,
       time : clock,
       date : Date.now(),
@@ -96,7 +130,7 @@ document.addEventListener("keydown",function(event) {
     var click = new Stamp(clock,Typer)
     var label = new PIXI.Text(Typer.concat(": ",(clock/1000).toFixed(2)),{font : '12px Gill Sans', fill : 0x077f4d});
     label.x = 200
-    label.y = 100
+    label.y = 150
     click.label = label
     // Display label and move others down
     stage.addChild(label)
@@ -104,12 +138,24 @@ document.addEventListener("keydown",function(event) {
       scores[i].label.y += 20
     }
     scores.push(click)
+    record.push(new Stamp(clock,Typer))
     // Clean your clock
     clock = 0;
   }
   // End
 })
 
+window.onbeforeunload = sendData;
+function sendData(){
+  var title = document.getElementById("myText").value;
+  if(title != "Title; a Semiotic Exploration of Declared Identity"){
+    firebase.push({sprints : record,
+      date : Date.now(),
+      ip : userip,
+      filename : title,
+    })
+  }
+}
 
 // Wrap it up
 var mount = document.getElementById("mount")
